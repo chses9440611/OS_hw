@@ -11,7 +11,7 @@ using namespace std;
 // The total num of child process is 5 x 2 = 10.
 #define FORK_TIME 5
 void createProcess(void);
-void deleteProcess(int);
+void deleteProcess(void);
 
 int main() {
   int cpid;
@@ -48,22 +48,20 @@ int main() {
     // Child process delcare the creation in own process
     createProcess();
     if (cpid > 0) {
-      cpid = waitpid(cpid, NULL, 0);
-      // The parent process declare the dead of child process.
-      deleteProcess(cpid);
+    	if( waitpid(cpid, NULL, 0) == -1)
+		  cout<< "Error occurs in child process " << cpid << endl;
     }
   } else {
 
     while (!spid.empty()) {
       cpid = spid.top();
       spid.pop();
-      cpid = waitpid(cpid, NULL, 0);
-      deleteProcess(cpid);
+      if( waitpid(cpid, NULL, 0) == -1)
+		  cout << "Error occurs in child process " << cpid << endl;
     }
-    // The main process declare the dead of child process.
-    deleteProcess(getpid());
   }
-
+  	// Process declare delete then return 0
+	deleteProcess();
   return 0;
 }
 
@@ -73,12 +71,7 @@ void createProcess(void) {
   return;
 }
 
-void deleteProcess(int childPid) {
-  if (childPid == -1)
-    cout << "ChildProcess of Parent pid " << getpid() << "died in error"
-         << endl;
-  else
-    cout << "The process pid " << childPid << " dead" << endl;
-
-  return;
+void deleteProcess(void) {
+	cout << "The process pid " << getpid() << " dead" << endl;
+	return;
 }
