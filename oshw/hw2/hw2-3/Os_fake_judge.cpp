@@ -14,6 +14,7 @@ using namespace std;
 int main (int argc , char **argv){
     int shmid = 0;
     int *shm;
+	int q=0, t=0,p=0;
     try{
         key_t key_value =  ftok("~", 123);
         cout << key_value << endl;
@@ -23,7 +24,19 @@ int main (int argc , char **argv){
         int ti = 100;
         int score = 0;
         while(ti--){
-            *shm = 0;
+			if(ti%3== 0){
+            	*shm = 0;
+				q++;
+			}
+			else if(ti%3 ==1){
+				*shm = 1;
+				t++;
+			}
+			else{
+				*shm = 2;
+				p++;
+			}
+			cout << "OK" << endl;
             string opponent_option ;
             cin >> opponent_option;
             cout << s <<endl;
@@ -31,6 +44,7 @@ int main (int argc , char **argv){
                 score++;
         }
         cerr << score << endl;
+		//cerr << "Scissor: " << q << ", Stone: " << t << ", Paper: " << p << endl; 
         shmdt(shm);
         shmctl(shmid,IPC_RMID,0);
     }
