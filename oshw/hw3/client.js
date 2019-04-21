@@ -25,7 +25,8 @@ for (var i = 0; i < cpus.length; i++) {
     child.on('message', function(message) {
         counter += 1;
         responseNumber += message;
-        if (counter == 8) {
+		console.log("Counter: " + counter);
+        if (counter == cpus.length) {
             console.log("Total response number: " + responseNumber);
             console.log("Test time: %d seconds", (testTime/1000));
             console.log("PoW Difficulty: " + PoWDifficulty);
@@ -33,3 +34,4 @@ for (var i = 0; i < cpus.length; i++) {
         }
     });
 }
+
