@@ -36,12 +36,13 @@ class EchoHandler(BaseRequestHandler):
     """Process request"""
     def handle(self):
         """ The function to recv and send result"""
-        print('Got connection from: ', self.client_address)
+        #print('Got connection from: ', self.client_address)
         while True:
             msg = self.request.recv(8192)
             if not msg:
                 break
-            msg = (msg.decode()).replace('\n', '') #change message from bytes to string and remove '\n'
+            msg = (msg.decode()).replace('\n', '')
+            #change message from bytes to string and remove '\n'
             #print("Message: ", msg)
             msg2 = server_work(msg)
             self.request.send(msg2.encode()) # change msg2 from string to bytes
@@ -56,6 +57,5 @@ if __name__ == '__main__':
             tSocket.start()
         SERV.serve_forever()
     except KeyboardInterrupt:
-            print("ByeBye!")
-            SERV.server_close()
-
+        print("ByeBye!")
+        SERV.server_close()
