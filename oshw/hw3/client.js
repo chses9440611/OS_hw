@@ -5,7 +5,7 @@ const fork = require('child_process').fork;
 var cpus = require('os').cpus();
 console.log("The number of CPUs: %d", cpus.length);
 
-var connectionNumber = 100;
+var connectionNumber = cpus.length;
 var testTime = 60000;
 var PoWDifficulty = 3;
 
@@ -25,7 +25,7 @@ for (var i = 0; i < cpus.length; i++) {
     child.on('message', function(message) {
         counter += 1;
         responseNumber += message;
-		console.log("Counter: " + counter);
+		//console.log("Counter: " + counter);
         if (counter == cpus.length) {
             console.log("Total response number: " + responseNumber);
             console.log("Test time: %d seconds", (testTime/1000));
