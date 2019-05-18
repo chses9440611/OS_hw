@@ -4,20 +4,24 @@
 .global spin_unlock
 
 spin_lock:
-	pushq %rbp
+	push %rbp
 	movq %rsp, %rbp
 	movq %rdi, -8(%rbp)
-L1:
-	cmp $0, -8(%rbp)
-	je L1
-	movl $0, -8(%rbp)
-
-	pop %rbp
+.L1:
+	movq -8(%rbp), %rax
+	movl (%rax), %eax
+	cmpl $1, %eax
+	je .L1 
+	movq -8(%rbp), %rax
+	movl $1, (%rax)
+	popq %rbp
 	ret
 
 spin_unlock:
 	push %rbp
-	mov %rsp, %rbp
-	movl $1, -8(%rbp)
+	movq %rsp, %rbp
+	movq %rdi, -8(%rbp)
+	movq -8(%rbp), %rax
+	movl $0, (%rax)
 	pop %rbp
 	ret
