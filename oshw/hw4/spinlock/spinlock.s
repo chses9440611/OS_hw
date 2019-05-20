@@ -1,27 +1,15 @@
-
-.text
-.global spin_lock
-.global spin_unlock
-
+	.text
+	.globl	spin_lock
+	.globl	spin_unlock
 spin_lock:
-	push %rbp
-	movq %rsp, %rbp
-	movq %rdi, -8(%rbp)
-.L1:
-	movq -8(%rbp), %rax
-	movl (%rax), %eax
-	cmpl $1, %eax
-	je .L1 
-	movq -8(%rbp), %rax
-	movl $1, (%rax)
-	popq %rbp
+	movl	$1, %edx
+.L2:
+	movl	$0, %eax
+	lock cmpxchgl	%edx, (%rdi)
+	jne	.L2
+	;xorl	%eax, %eax
 	ret
 
 spin_unlock:
-	push %rbp
-	movq %rsp, %rbp
-	movq %rdi, -8(%rbp)
-	movq -8(%rbp), %rax
-	movl $0, (%rax)
-	pop %rbp
+	movl	$0, (%rdi)
 	ret
