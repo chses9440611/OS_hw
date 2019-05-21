@@ -26,9 +26,9 @@
 #define SRV_PORT 7777
 
 /* TODO: Useful structure */
-typedef struct {
-	int value;
-}semaphore;
+union semun {
+  int val;
+};
 
 struct Buffer{
     int eof;
@@ -50,10 +50,26 @@ void IPC_init();
 void IPC_release();
 
 /* TODO: Declare some global variable here */
-semaphore *download_write_S;
-semaphore *write_download_S;
+int sem_id;
+
 int shm_id;
 struct Buffer *buf;
+
+void sem_release(int sem_id, int sem_no){
+	struct sembuf sem_buf;
+	sem_buf.sem_num = sem_no;
+	sem_buf.sem_op  = 1;
+	sem_buf.sem_flg = SEM_UNDO;
+	semop(sem_id, &sem_buf, 1);
+}
+
+void sem_take(int sem_id, int sem_no){
+	struct sembuf sem_buf;
+	sem_buf.sem_num = sem_no;
+	sem_buf.sem_op  = -1;
+	sem_buf.sem_flg = SEM_UNDO;
+	semop(sem_id, &sem_buf, 1);
+}
 
 int main(int argc, char** argv){
     
@@ -113,8 +129,7 @@ void downloader(int target_id){
     while ( 1 )
     {
         /* TODO: sync downloader and writer */
-		while(write_download_S->value <=0);
-		(write_download_S->value)--;
+	  	sem_take(sem_id, 1);
         ret = read(sockfd, buf[local_it].ctx, BUFSIZE);
         if (ret == -1){
             perror("socket may be broken");
@@ -123,14 +138,15 @@ void downloader(int target_id){
         else if (ret == 0){
             buf[local_it].eof = 1;
             /* TODO: signal writer */
-			(download_write_S->value)++;
+			sem_release(sem_id, 1);
             exit(0);
         }
         buf[local_it].len = ret;
         local_it = (local_it+1) % BUFNUM; 
         
         /* TODO: sync downloader and writer */
-		(download_write_S->value)++;
+		sem_release(sem_id, 0);
+		
 
     }
 
@@ -151,8 +167,7 @@ void writer(int target_id){
     while(1){
 
         /* TODO: sync downloader and writer */
-		while(download_write_S->value <= 0);
-		(download_write_S->value)++;
+	  	sem_take(sem_id, 0);
         /* Receive EOF from downloader */
         if (buf[local_it].eof){
             printf("Receive EOF, exiting writer process\n");
@@ -166,14 +181,14 @@ void writer(int target_id){
         local_it = (local_it+1) % BUFNUM;
 
         /* TODO: sync downloader and writer */
-		(write_download_S->value)++;
+		sem_release(sem_id, 1);
         
     }
 }
 
 void IPC_init(){
     
-	//union semun sem_union;
+	union semun sem_union;
     
     shm_id = shmget(IPC_PRIVATE, sizeof(struct Buffer)*BUFNUM, IPC_CREAT|0600);
     buf = (struct Buffer*)shmat(shm_id, NULL, 0);
@@ -188,10 +203,11 @@ void IPC_init(){
     printf("shm_id: %d\n", shm_id);
     
     /* TODO: Create semaphore */
-	download_write_S = malloc(sizeof(semaphore));
-	write_download_S = malloc(sizeof(semaphore));
-    download_write_S -> value = 0;
-	write_download_S -> value = 1;
+	sem_id = semget(0, 2, 0666 | IPC_CREAT);
+	sem_union.val = 0;
+	semctl(sem_id, 0, SETVAL, sem_union);
+	sem_union.val = 1;
+	semctl(sem_id, 1, SETVAL, sem_union);
 }
 
 void IPC_release(){
@@ -203,6 +219,8 @@ void IPC_release(){
     shmctl(shm_id, IPC_RMID, 0);
     
     /* TODO(Optinal): Release semaphore */
+	semctl(sem_id, 0, IPC_RMID);
+	semctl(sem_id, 1, IPC_RMID);
 
 }
 
