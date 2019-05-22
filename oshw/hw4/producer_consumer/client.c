@@ -150,7 +150,8 @@ void downloader(int target_id){
     while ( 1 )
     {
         /* TODO: sync downloader and writer */
-	  	sem_sync_w2d(sem_id);
+	  	//sem_sync_w2d(sem_id);
+		sem_take(sem_id, 1);
         ret = read(sockfd, buf[local_it].ctx, BUFSIZE);
         if (ret == -1){
             perror("socket may be broken");
@@ -186,7 +187,8 @@ void writer(int target_id){
     while(1){
 
         /* TODO: sync downloader and writer */
-	  	sem_sync_d2w(sem_id);
+	  	//sem_sync_d2w(sem_id);
+		sem_take(sem_id, 0);
         /* Receive EOF from downloader */
         if (buf[local_it].eof){
             printf("Receive EOF, exiting writer process\n");
